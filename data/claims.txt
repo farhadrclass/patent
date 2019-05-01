@@ -1,4 +1,4 @@
-"1. A product tag system, comprising:
+1. A product tag system, comprising:
 an RFID tag adapted for attachment to a product; 
 at least one data store in said tag for bar code information relating to said product; 
 a tag detacher for removing said tag from said product at a point of sale; 
@@ -43,4 +43,4 @@ displaying, at said point of sale, said bar code information in a form which can
 26. The method of claim 20, wherein said attaching and writing steps can occur in any order.
 27. The method of claim 20, further comprising the step of displaying said bar code information from a position fixed relative to said conventional bar code scanner.
 28. The method of claim 20, further comprising displaying said bar code information in human readable form.
-29. The method of claim 20, further comprising the step of writing to said tag, at said point of sale, information regarding said sale of said product, whereby said product sale information is available for subsequent use."
+29. The method of claim 20, further comprising the step of writing to said tag, at said point of sale, information regarding said sale of said product, whereby said product sale information is available for subsequent use.

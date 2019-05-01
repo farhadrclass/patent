@@ -6,7 +6,7 @@ take the raw Google patent Claim as string and convert it into something that a 
     - JavaScript
 
 # Requirments
-    - nodejs
+    - nodejs 
     - npm
 
 # How to run
