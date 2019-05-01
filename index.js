@@ -1,7 +1,7 @@
 var fs = require('fs');
 
 // read claims.txt
-fs.readFile(__dirname + '/data/claims.txt', { encoding: 'utf8' }, function(err, data) {
+fs.readFile(__dirname + '/data/claims2.txt', { encoding: 'utf8' }, function(err, data) {
 
     // if there was error reading the file then throw error
     if (err) {
@@ -63,19 +63,39 @@ function convert(data) {
         // SPLIT currentclaim by , as claimDetails
         var claimDetails = claim.split(',');
 
-        // pull claim id 
-        var id = claimDetails[0].match(/^[0-9]+/g);
+        // read first section to pull claim id and dependent id 
+        var ids = claimDetails[0].match(/(^[0-9]+)[.]([a-zA-Z ]+)([0-9]*)/);
 
-        // add to result array
-        result.push({
-            'id': id[0],
-            'claim': claim
-        });
+        // if id[3] is set means this is a dependent
+        if(ids[3]) {
 
+            // find parent
+            // TODO: to solution : recursive search or always keep the parent
+            var foundclaim = result.find(function(element){
+                return element.id == ids[3];
+            });
+
+            // if parent is valid add to parent else add as main Claim
+            if(foundclaim) {
+
+                // add as dependent to the parent Claim
+                foundclaim.dependent.push({
+                    'id': ids[1],
+                    'claim': claim,
+                    'dependent': []
+                });
+            }
+        } else {
+            // add to result array
+            result.push({
+                'id': ids[1],
+                'claim': claim,
+                'dependent': []
+            });
+        }
     });
 
     return JSON.stringify(result);
-
 }
 
 /**
