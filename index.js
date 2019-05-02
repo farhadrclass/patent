@@ -1,113 +1,60 @@
 var fs = require('fs');
 
-// read claims.txt
-fs.readFile(__dirname + '/data/claims2.txt', { encoding: 'utf8' }, function(err, data) {
+// read raw data form claims.txt
+fs.readFile(__dirname + '/data/claims.txt', { encoding: 'utf8' }, function(err, data) {
 
     // if there was error reading the file then throw error
     if (err) {
         throw err;
     }
 
-    console.log('\n\n-----------------\n\n');
+    // build the hierarchy data structure
+    claims = buildHierarchy(data);
 
-    // convert text claims to a structured hierarchical format
-    var result = convert(data);
+    console.log(JSON.stringify(claims));
 
-    // display formatted data ready to use in array
-    console.log(result);
-
-    return result;
+    return claims;
 
 });
 
 /**
- * converts a string to a two dimentional array based on a language
+ * builds Hirerarchical data structure
  * somthing like this: 
- * {{claim1, {dependent1, dependent2}}, {claim2, {}},{claim3, {dependent1, dependent2, dependent3}},...}
+ * [{"id":"1","claim":"1. A product","dependent":[{"id":"2","claim":"2. The system of claim 1","dependent":[],"parent_id":"1"},{"id":"3","claim":"3. The system of claim 1","dependent":[{"id":"4","claim":"4. The system of claim 3","dependent":[],"parent_id":"3"}],"parent_id":"1"}],"parent_id":""}]
  * 
- * @param {String} claims Claims as text
- * @return {Object} array object of claims
+ * @param {Object} data object array of claims
+ * @return {Object} structrued object array of claims
  */
-function convert(data) {
+function buildHierarchy(data)
+{
 
-    /* pseudocode:
+    // process raw string and convert it to JSON objects
+    var claims = initialClaims(data);
 
-    var result = {};
+    // filter and process claims that parent_id is set
+    claims.filter( claim => claim.parent_id !== '').forEach(
 
-     FOR EACH currentclaim IN claims
+        (claim, index) => {
 
-        SPLIT currentclaim by , as claimDetails
+            // find parent claim and set the current claim as it's dependent
+            claims.find(function(element){
+                return element.id == claim.parent_id;
+            }).dependent.push(claim);
 
-        IF claimDetails[0] is a dependent THEN
-            add currentclaim as a dependent to child array for last main currentclaim
-        ELSE
-            add currentclaim as a main currentclaim to result
-        END IF 
-
-     END FOR
-
-
-     RETURN result;
-
-    */
-
-
-    var result = [];
-
-    // get claims from string and save to array
-    claims = getClaims(data);
-
-    // process each claim in claims
-    claims.forEach(claim => {
-
-        // SPLIT currentclaim by , as claimDetails
-        var claimDetails = claim.split(',');
-
-        // read first section to pull claim id and dependent id 
-        var ids = claimDetails[0].match(/(^[0-9]+)[.]([a-zA-Z ]+)([0-9]*)/);
-
-        // if id[3] is set means this is a dependent
-        if(ids[3]) {
-
-            // find parent
-            // TODO: to solution : recursive search or always keep the parent
-            var foundclaim = result.find(function(element){
-                return element.id == ids[3];
-            });
-
-            // if parent is valid add to parent else add as main Claim
-            if(foundclaim) {
-
-                // add as dependent to the parent Claim
-                foundclaim.dependent.push({
-                    'id': ids[1],
-                    'claim': claim,
-                    'dependent': []
-                });
-            }
-        } else {
-            // add to result array
-            result.push({
-                'id': ids[1],
-                'claim': claim,
-                'dependent': []
-            });
         }
-    });
+    );
 
-    return JSON.stringify(result);
+    // retrun only claims that parent is empty
+    return claims.filter( claim => claim.parent_id === '');
 }
 
 /**
- * get claims from string and save to array
+ * get raw string and convert to structured JSON Objects
  * 
  * @param {Stirng} data  claims string
  * @return {Object} array object of claims
  */
-function getClaims(data) {
-
-    // match line by line
-    var lines = data.match(/.*/g);
+function initialClaims(data) {
 
     // claims array
     var result = [];
@@ -115,7 +62,8 @@ function getClaims(data) {
     // current currentclaim
     var currentclaim = null;
 
-    lines.forEach(line => {
+    // read the raw string line by line
+    data.match(/.*/g).forEach(line => {
 
         // if line format is like : 1. A Product tag....
         if (line.match(/[0-9]+[.][ ].*/)) {
@@ -134,5 +82,13 @@ function getClaims(data) {
     // push the last claim to result
     result.push(currentclaim);
 
-    return result;
+    // run a map function on each result element to convert it to JSON Object
+    return result.map(function(claim) { 
+
+        // read first section to pull claim id and dependent id 
+        var ids = claim.match(/(^[0-9]+)[.]([a-zA-Z ]+)([0-9]*)/);
+
+        return {id: ids[1], parent_id: ids[3], claim: claim, dependent: []};
+    });
+
 }
